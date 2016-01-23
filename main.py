@@ -10,18 +10,21 @@ def userInput():
 
 connected = False;
 
-conn = muirc.Connection(("172.16.1.88", 6667))
+conn = muirc.Connection(("10.64.224.17", 6667))
 conn.nick("AnnoyingBot")
 conn.UsEr("a", "a", "a", "a")
 
 state = "wait_motd"
 for message in conn:
-     print(message)
+
      if message["command"] == "372":
         print(message["params"][1])
      if message["command"] == "PRIVMSG" and message["params"][1] == "go away":
         conn.quit("Bye, World! :-(")
         connected = False
+     if message["command"] == "PRIVMSG" and message["params"][1].find("red") != -1:
+        conn.privmsg("#local", "\001ACTION You said red! I like red!\001")
+        #connected = False
      
      if message["command"] == "PRIVMSG":
         text = message["user"] + ': ' + message["params"][1]
