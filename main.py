@@ -16,6 +16,7 @@ conn.UsEr("a", "a", "a", "a")
 
 state = "wait_motd"
 for message in conn:
+     print(message)
      if message["command"] == "372":
         print(message["params"][1])
      if message["command"] == "PRIVMSG" and message["params"][1] == "go away":
