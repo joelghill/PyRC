@@ -1,4 +1,7 @@
 import muirc
+import sys
+import pybot
+
 from threading import Thread
 
 
@@ -7,48 +10,54 @@ def userInput():
         msg = raw_input();
         if connected:
             conn.privmsg("#local", msg)
+            
+connected = True
 
-connected = False;
+server = ""
+channel = ""
 
-conn = muirc.Connection(("10.64.224.17", 6667))
+if(len(sys.argv) < 2):
+    print("Not enough arguments. Please specify a server and channel")
+    sys.exit()
+else:
+    server = str(sys.argv[1])
+    channel = str(sys.argv[2])
+
+conn = muirc.Connection((server, 6667))
 conn.nick("AnnoyingBot")
-conn.UsEr("a", "a", "a", "a")
+conn.UsEr("pythonbot", "pythonHost", "a", "bot")
 
 state = "wait_motd"
 for message in conn:
-
-     if message["command"] == "372":
+    
+    #if sever message, print content
+    if message["command"] == "372":
         print(message["params"][1])
-     if message["command"] == "PRIVMSG" and message["params"][1] == "go away":
-        conn.quit("Bye, World! :-(")
-        connected = False
-     if message["command"] == "PRIVMSG" and message["params"][1].find("red") != -1:
-        conn.privmsg("#local", "\001ACTION You said red! I like red!\001")
-        #connected = False
-     
-     if message["command"] == "PRIVMSG":
-        text = message["user"] + ': ' + message["params"][1]
-        print(text)
-        
-     if state == "wait_motd":
-         # 376 => MOTD ends
-         if message["command"] == "376":
-             state = "end_motd"
+      
+    if state == "wait_motd":
+        # 376 => MOTD ends
+        if message["command"] == "376":
+            state = "end_motd"
 
      # Join #muirc
-     if state == "end_motd":
-         conn.join("#local")
-         state = "wait_join"
+    if state == "end_motd":
+        conn.join(channel)
+        state = "wait_join"
 
      # Wait for join ack
-     if state == "wait_join":
-         if message["command"] == "JOIN":
+    if state == "wait_join":
+        if message["command"] == "JOIN":
                 connected = True
+                #start input thread from user
                 t = Thread(target=userInput)
                 t.start()
                 state = "hello_world"
 
      # Send "Hello, World! :-)" to the #muirc channel
-     if state == "hello_world":
-         conn.privmsg("#local", "\001ACTION yo\001")
+    if state == "hello_world":
+        bot = pybot.pyrcAI(conn, channel)
+        bot.handleMessage(message)
+         #conn.privmsg("#local", "\001ACTION yo\001")
          #conn.action("Is waving like a madman....")
+
+connected = False
